@@ -1,0 +1,30 @@
+<?php
+
+//add these two lines to a HOOK_preprocess_solr_search function in module.inc or theme/theme.inc
+$replaced = replace_label_for_pages($result);
+$variables['results'][$key]['solr_doc']['dc.title']['value'] = $replaced;
+
+//add this function to the same file
+
+function replace_label_for_pages($result) {
+  foreach ($result['content_models'] as $model) {
+    $bookpage = $model == 'info:fedora/islandora:pageCModel';
+    $newspage = $model == 'info:fedora/islandora:newspaperPageCModel';
+    if ($newspage || $bookpage) {
+      $object = islandora_object_load($result['PID']);
+      $sequence = $object->relationships->get('http://islandora.ca/ontology/relsext#', 'isSequenceNumber');
+      //use relationships to get page number
+      $label = $object->label;
+      $parent = $object->getParents();
+      unset($object);
+      foreach($parent as $key => $pid){
+        //last $parent wins. not ideal in edge case of two parent objects
+        $parent = islandora_object_load($pid);
+        $page =  ': Page ' . $sequence[0]['object']['value'];;
+        $text  = $parent->label;
+        $replaced = preg_replace('#(<a.*?>).*?(</a>)#', "$1$text$page$2", $result['solr_doc']['dc.title']['value']);
+        return $replaced;
+      }
+    }
+  }
+}

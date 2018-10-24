@@ -1,10 +1,12 @@
 <?php
 
-//add these two lines to a HOOK_preprocess_solr_search function in module.inc or theme/theme.inc
-$replaced = replace_label_for_pages($result);
-$variables['results'][$key]['solr_doc']['dc.title']['value'] = $replaced;
-
-//add this function to the same file
+function islandora_pageCmodel_search_preprocess_islandora_solr(&$variables) {
+  $results = $variables['results'];
+  foreach ($results as $key => $result) {
+    $replaced = replace_label_for_pages($result);
+    $variables['results'][$key]['solr_doc']['dc.title']['value'] = $replaced;
+  }
+}
 
 function replace_label_for_pages($result) {
   foreach ($result['content_models'] as $model) {
@@ -25,6 +27,9 @@ function replace_label_for_pages($result) {
         $replaced = preg_replace('#(<a.*?>).*?(</a>)#', "$1$text$page$2", $result['solr_doc']['dc.title']['value']);
         return $replaced;
       }
+    }
+    else {
+      return $result['solr_doc']['dc.title']['value'];
     }
   }
 }

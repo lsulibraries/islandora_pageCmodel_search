@@ -1,0 +1,4 @@
+name = Islandora page Content Model Search
+description = Replace search result title for newspaper and book pages with parent title and page number.
+package = Islandora
+core = 7.x

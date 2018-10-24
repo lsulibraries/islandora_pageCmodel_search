@@ -2,34 +2,46 @@
 
 function islandora_pageCmodel_search_preprocess_islandora_solr(&$variables) {
   $results = $variables['results'];
-  foreach ($results as $key => $result) {
-    $replaced = replace_label_for_pages($result);
-    $variables['results'][$key]['solr_doc']['dc.title']['value'] = $replaced;
+  if (module_exists('islandora_collection_toggle_publish')) {
+    $query = db_query('select pid FROM islandora_collection_toggle_publish_collections');
+    $unpublished = $query->fetchAll();
+    $unpub_array = array();
+    foreach ($unpublished as $item) {
+      $unpub_array[$item->pid] = $item->pid;
+    }
+    foreach ($results as $key => $result) {
+      if (!in_array($result['PID'], $unpub_array)) {
+        //stay the same
+        $replaced = replace_label_for_pages($result);
+        $variables['results'][$key]['solr_doc']['dc.title']['value'] = $replaced;
+      }
+    }
+  }
+  else {
+    foreach ($results as $key => $result) {
+      $replaced = replace_label_for_pages($result);
+      $variables['results'][$key]['solr_doc']['dc.title']['value'] = $replaced;
+    }
   }
 }
 
 function replace_label_for_pages($result) {
-  foreach ($result['content_models'] as $model) {
-    $bookpage = $model == 'info:fedora/islandora:pageCModel';
-    $newspage = $model == 'info:fedora/islandora:newspaperPageCModel';
-    if ($newspage || $bookpage) {
-      $object = islandora_object_load($result['PID']);
-      $sequence = $object->relationships->get('http://islandora.ca/ontology/relsext#', 'isSequenceNumber');
-      //use relationships to get page number
-      $label = $object->label;
-      $parent = $object->getParents();
-      unset($object);
-      foreach($parent as $key => $pid){
-        //last $parent wins. not ideal in edge case of two parent objects
-        $parent = islandora_object_load($pid);
-        $page =  ': Page ' . $sequence[0]['object']['value'];;
-        $text  = $parent->label;
-        $replaced = preg_replace('#(<a.*?>).*?(</a>)#', "$1$text$page$2", $result['solr_doc']['dc.title']['value']);
-        return $replaced;
-      }
-    }
-    else {
-      return $result['solr_doc']['dc.title']['value'];
-    }
+  $bookpage = in_array("info:fedora/islandora:pageCModel", $result['content_models']);
+  $newspage = in_array("info:fedora/islandora:newspaperPageCModel", $result['content_models']);
+  if ($newspage || $bookpage) {
+    $object = islandora_object_load($result['PID']);
+    $sequence = $object->relationships->get('http://islandora.ca/ontology/relsext#', 'isSequenceNumber');
+    //use relationships to get page number
+    $label = $object->label;
+    $parent = $object->getParents(0);
+    //last $parent wins. not ideal in edge case of two parent objects
+    $parent = islandora_object_load($parent[0]);
+    $page =  ': Page ' . $sequence[0]['object']['value'];;
+    $text  = $parent->label;
+    $replaced = preg_replace('#(<a.*?>).*?(</a>)#', "$1$text$page$2", $result['solr_doc']['dc.title']['value']);
+    return $replaced;
+  }
+  else {
+    return $result['solr_doc']['dc.title']['value'];
   }
 }

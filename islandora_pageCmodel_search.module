@@ -3,15 +3,9 @@
 function islandora_pageCmodel_search_preprocess_islandora_solr(&$variables) {
   $results = $variables['results'];
   if (module_exists('islandora_collection_toggle_publish')) {
-    $query = db_query('select pid FROM islandora_collection_toggle_publish_collections');
-    $unpublished = $query->fetchAll();
-    $unpub_array = array();
-    foreach ($unpublished as $item) {
-      $unpub_array[$item->pid] = $item->pid;
-    }
+    module_load_include('module', 'islandora_collection_toggle_publish');
     foreach ($results as $key => $result) {
-      if (!in_array($result['PID'], $unpub_array)) {
-        //stay the same
+      if (grant_access($result['PID')) {
         $replaced = replace_label_for_pages($result);
         if (isset($variables['results'][$key]['solr_doc'])) {
           $variables['results'][$key]['solr_doc']['dc.title']['value'] = $replaced;

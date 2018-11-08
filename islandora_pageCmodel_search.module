@@ -13,14 +13,18 @@ function islandora_pageCmodel_search_preprocess_islandora_solr(&$variables) {
       if (!in_array($result['PID'], $unpub_array)) {
         //stay the same
         $replaced = replace_label_for_pages($result);
-        $variables['results'][$key]['solr_doc']['dc.title']['value'] = $replaced;
+        if (isset($variables['results'][$key]['solr_doc'])) {
+          $variables['results'][$key]['solr_doc']['dc.title']['value'] = $replaced;
+        }
       }
     }
   }
   else {
     foreach ($results as $key => $result) {
       $replaced = replace_label_for_pages($result);
-      $variables['results'][$key]['solr_doc']['dc.title']['value'] = $replaced;
+      if (isset($variables['results'][$key]['solr_doc'])) {
+        $variables['results'][$key]['solr_doc']['dc.title']['value'] = $replaced;
+      }
     }
   }
 }

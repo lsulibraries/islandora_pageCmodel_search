@@ -14,14 +14,6 @@ function islandora_pageCmodel_search_preprocess_islandora_solr(&$variables) {
       }
     }
   }
-  else {
-    foreach ($results as $key => $result) {
-      $replaced = replace_label_for_pages($result);
-      if (isset($variables['results'][$key]['solr_doc'])) {
-        $variables['results'][$key]['solr_doc']['dc.title']['value'] = $replaced;
-      }
-    }
-  }
 }
 
 function replace_label_for_pages($result) {

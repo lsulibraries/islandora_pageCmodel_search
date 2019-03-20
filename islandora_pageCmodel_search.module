@@ -9,7 +9,7 @@ function islandora_pageCmodel_search_preprocess_islandora_solr(&$variables) {
       if (grant_access($obj)) {
         $replaced = replace_label_for_pages($result);
         if (isset($variables['results'][$key]['solr_doc'])) {
-          $variables['results'][$key]['solr_doc']['dc.title']['value'] = $replaced;
+          $variables['results'][$key]['solr_doc']['mods_titleInfo_title_ms']['value'] = $replaced;
         }
       }
     }
@@ -29,10 +29,10 @@ function replace_label_for_pages($result) {
     $parent = islandora_object_load($parent[0]);
     $page =  ': Page ' . $sequence[0]['object']['value'];;
     $text  = $parent->label;
-    $replaced = preg_replace('#(<a.*?>).*?(</a>)#', "$1$text$page$2", $result['solr_doc']['dc.title']['value']);
+    $replaced = preg_replace('#(<a.*?>).*?(</a>)#', "$1$label$2", "$text$page");
     return $replaced;
   }
   else {
-    return $result['solr_doc']['dc.title']['value'];
+    return $result['solr_doc']['mods_titleInfo_title_ms']['value'];
   }
 }
